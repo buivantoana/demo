@@ -1,112 +1,139 @@
 import Product from "../models/Product";
+import { validateProduct } from "../validations/productValid";
 
-export const getAllProduct = async (req, res) => {
+export async function addProduct(req, res) {
+  try {
+    let { error } = validateProduct.validate(req.body, { abortEarly: false });
+    console.log(error);
+    if (error) {
+      let err = error.details.map((item) => {
+        return item.message;
+      });
+      return res.status(200).json({
+        status: 1,
+        message: err,
+      });
+    }
+    const data = await Product.create(req.body);
+
+    if (!data) {
+      return res.status(200).json({
+        status: 1,
+        message: "them that bai",
+      });
+    }
+    return res.status(200).json({
+      status: 0,
+      message: "them thanh cong",
+      data,
+    });
+  } catch (error) {
+    return res.status(200).json({
+      status: 1,
+      message: "loi server",
+    });
+  }
+}
+
+export async function getProduct(req, res) {
   try {
     const data = await Product.find();
-    if (!data || data.length === 0) {
-      return res.status(400).json({
-        message: "Khong tim thay san pham nao!",
+
+    if (!data || !data[0]) {
+      return res.status(200).json({
+        status: 1,
+        message: "khong oc san pham",
       });
     }
-
     return res.status(200).json({
-      message: "Lay danh sach san pham thanh cong!",
+      status: 0,
+      message: "lay thanh ocng",
       data,
     });
   } catch (error) {
-    return res.status(500).json({
-      name: error.name || "Loi server!",
-      message: error.message || "Loi server!",
+    return res.status(200).json({
+      status: 1,
+      message: "loi server",
     });
   }
-};
-
-export const getDetailProduct = async (req, res) => {
+}
+export async function getOneProduct(req, res) {
   try {
-    const id = req.params.id;
-    const data = await Product.findById(id);
+    const data = await Product.findById(req.params.id);
+
     if (!data) {
-      return res.status(400).json({
-        message: "Khong tim thay san pham nao!",
+      return res.status(200).json({
+        status: 1,
+        message: "khong oc san pham",
       });
     }
-
     return res.status(200).json({
-      message: "Lay san pham thanh cong!",
+      status: 0,
+      message: "lay thanh ocng",
       data,
     });
   } catch (error) {
-    return res.status(500).json({
-      name: error.name || "Loi server!",
-      message: error.message || "Loi server!",
+    return res.status(200).json({
+      status: 1,
+      message: "loi server",
     });
   }
-};
+}
 
-export const deleteProduct = async (req, res) => {
+export async function deleteProduct(req, res) {
   try {
-    const id = req.params.id;
-    const data = await Product.findByIdAndDelete(id);
+    const data = await Product.findByIdAndDelete(req.params.id);
+
     if (!data) {
-      return res.status(400).json({
-        message: "Xoa that bai!",
+      return res.status(200).json({
+        status: 1,
+        message: "xoa htat bat",
       });
     }
-
     return res.status(200).json({
-      message: "Xoa thanh cong!",
-      data,
+      status: 0,
+      message: "xoa thanh ocng",
     });
   } catch (error) {
-    return res.status(500).json({
-      name: error.name || "Loi server!",
-      message: error.message || "Loi server!",
+    return res.status(200).json({
+      status: 1,
+      message: "loi server",
     });
   }
-};
+}
 
-export const createProduct = async (req, res) => {
+export async function updateProduct(req, res) {
   try {
-    const data = await Product.create(req.body);
-    if (!data) {
-      return res.status(400).json({
-        message: "Tao moi san pham that bai!",
+    let { error } = validateProduct.validate(req.body, { abortEarly: false });
+    console.log(error);
+    if (error) {
+      let err = error.details.map((item) => {
+        return item.message;
+      });
+      return res.status(200).json({
+        status: 1,
+        message: err,
       });
     }
-
-    return res.status(200).json({
-      message: "Tao moi san pham thanh cong!",
-      data,
+    const data = await Product.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
     });
-  } catch (error) {
-    return res.status(500).json({
-      name: error.name || "Loi server!",
-      message: error.message || "Loi server!",
-    });
-  }
-};
 
-export const updateProduct = async (req, res) => {
-  try {
-    const data = await Product.findOneAndReplace(
-      { _id: req.params.id },
-      { ...req.body, updatedAt: new Date() },
-      {
-        new: true,
-      }
-    );
     if (!data) {
-      return res.status(400).json({ message: "Cap nhat san pham that bai!" });
+      return res.status(200).json({
+        status: 1,
+        message: "update htat bat",
+      });
     }
-
     return res.status(200).json({
-      message: "Cap nhat san pham thanh cong!",
+      status: 0,
+      message: "update thanh ocng",
       data,
     });
   } catch (error) {
-    return res.status(500).json({
-      name: error.name || "Loi server!",
-      message: error.message || "Loi server!",
+    return res.status(200).json({
+      status: 1,
+      message: "loi server",
     });
   }
-};
+}

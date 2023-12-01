@@ -1,137 +1,96 @@
 import User from "../models/User";
-import { signInValid, signUpValid } from "../validations/userValid";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { validateSignin, validateSignup } from "../validations/userValid";
 
-import dotenv from "dotenv";
-dotenv.config();
-
-export const signUp = async (req, res) => {
+export async function signin(req, res) {
   try {
-    /**
-     * Bước 1: Validation values
-     * Bước 2: Đã tồn tại email trong hệ thống chưa?
-     * Bước 3: Mã hoá password
-     * Bước 4: Xoá password trước khi gửi trả dữ liệu.
-     * Bước 5: Gửi thông báo cho người dùng.
-     */
-
-    const { error } = signUpValid.validate(req.body, { abortEarly: false });
-
+    let { error } = validateSignin.validate(req.body, { abortEarly: false });
     if (error) {
-      const errors = error.details.map((err) => err.message);
-      return res.status(400).json({
-        message: errors.join(", "),
+      let err = error.details.map((item) => item.message);
+      return res.status(200).json({
+        status: 0,
+        message: err,
       });
     }
+    let checkEmail = await User.find({ email: req.body.email });
 
-    const checkEmail = await User.findOne({ email: req.body.email });
-
-    if (checkEmail) {
-      return res.status(400).json({
-        message: "Email này đã được đăng ký, bạn có muốn đăng nhập không?",
+    if (checkEmail[0]) {
+      return res.status(200).json({
+        status: 1,
+        message: "email da ton tai",
       });
     }
-
-    // B3: ma hoa pass
-
-    // Cach 2: Dung bcryptjs
-    const passwordHash = await bcrypt.hash(req.body.password, 10);
-    if (!passwordHash) {
-      return res.status(400).json({
-        message: "Ma hoa mat khau that bai!",
+    let hashpassword = await bcrypt.hash(req.body.password, 10);
+    if (!hashpassword) {
+      return res.status(200).json({
+        status: 1,
+        message: "ma hoa that bai",
       });
     }
-    const user = {
+    let data = await User.create({
       username: req.body.username,
+      password: hashpassword,
       email: req.body.email,
-      password: passwordHash,
-    };
-
-    const data = await User.create(user);
+    });
     if (!data) {
-      return res.status(400).json({
-        message: "Dang ky that bai!",
+      return res.status(200).json({
+        status: 1,
+        message: "them that bai",
       });
     }
-    data.password = undefined;
+
     return res.status(200).json({
-      message: "Dang ky thanh cong!",
+      status: 0,
+      message: "thanh ocng",
       data,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Dang ky that bai!",
-      detail: error.message,
+    return res.status(200).json({
+      status: 1,
+      message: "loi server",
     });
   }
-};
+}
 
-export const signIn = async (req, res) => {
+export async function signup(req, res) {
   try {
-    /**
-     * Buoc 1: Validation values
-     * Buoc 2: Kiem tra email co ton tai trong he thong khong?
-     * Buoc 3: So sanh password
-     * Buoc 4: Tao token
-     * Buoc 5: Gui token cho nguoi dung
-     */
-    const { error } = signInValid.validate(req.body, { abortEarly: false });
-
+    let { error } = validateSignup.validate(req.body, { abortEarly: false });
     if (error) {
-      const errors = error.details.map((err) => err.message);
-      return res.status(400).json({
-        message: errors,
+      let err = error.details.map((item) => item.message);
+      return res.status(200).json({
+        status: 0,
+        message: err,
       });
     }
+    let checkEmail = await User.find({ email: req.body.email });
 
-    // Buoc 2: Kiem tra email co ton tai trong he thong khong?
-
-    const checkEmail = await User.findOne({ email: req.body.email });
-
-    // Buoc 3: So sanh pass:
-
-    if (!checkEmail) {
-      return res.status(400).json({
-        message: "Email chua duoc dang ky!",
+    if (!checkEmail[0]) {
+      return res.status(200).json({
+        status: 1,
+        message: "email khong ton tai",
       });
     }
-
-    const checkPass = await bcrypt.compare(
+    let hashpassword = await bcrypt.compare(
       req.body.password,
-      checkEmail.password
+      checkEmail[0].password
     );
-    console.log(checkPass);
-
-    if (!checkEmail) {
-      return res.status(400).json({
-        message: "Mat khau khong dung!",
+    if (!hashpassword) {
+      return res.status(200).json({
+        status: 1,
+        message: "mat khau sai",
       });
     }
-
-    // Buoc 4: Tao token
-
-    const token = jwt.sign({ _id: checkEmail._id }, process.env.SECRET_CODE, {
-      expiresIn: "1d",
-    });
-
-    if (!token) {
-      return res.status(400).json({
-        message: "Tao token that bai!",
-      });
-    }
-
-    // Buoc 5: Gui token cho nguoi dung
-    checkEmail.password = undefined;
+    let token = jwt.sign({ id: checkEmail[0]._id }, "token");
     return res.status(200).json({
-      message: "Dang nhap thanh cong!",
-      accessToken: token,
-      user: checkEmail,
+      status: 0,
+      message: "dang nhap thanh ocng",
+      token,
     });
   } catch (error) {
-    return res.status(500).json({
-      name: error.name,
-      message: error.message,
+    return res.status(200).json({
+      status: 1,
+      message: "loi server",
     });
   }
-};
+}

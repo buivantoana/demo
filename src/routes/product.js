@@ -1,19 +1,17 @@
 import { Router } from "express";
 import {
-  createProduct,
+  addProduct,
   deleteProduct,
-  getAllProduct,
-  getDetailProduct,
+  getOneProduct,
+  getProduct,
   updateProduct,
 } from "../controllers/products";
 
-import { checkRequestBodyProduct } from "../middlewares/checkRequestBodyProduct";
-import { checkIsAdmin } from "../middlewares/checkIsAdmin";
-
 const routerProduct = Router();
-routerProduct.get("/", getAllProduct);
-routerProduct.get("/:id", getDetailProduct);
-routerProduct.delete("/:id", checkIsAdmin, deleteProduct);
-routerProduct.post("/", checkIsAdmin, checkRequestBodyProduct, createProduct);
-routerProduct.put("/:id", checkIsAdmin, checkRequestBodyProduct, updateProduct);
+routerProduct.post("/", addProduct);
+routerProduct.get("/", getProduct);
+routerProduct.get("/:id", getOneProduct);
+routerProduct.delete("/:id", deleteProduct);
+routerProduct.put("/:id", updateProduct);
+
 export default routerProduct;

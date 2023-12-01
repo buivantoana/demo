@@ -1,15 +1,13 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema(
+const User = new mongoose.Schema(
   {
     username: {
       type: String,
-      required: true,
     },
     email: {
       type: String,
       required: true,
-      unique: true,
     },
     password: {
       type: String,
@@ -17,13 +15,14 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "sale", "member"],
-      default: "member",
+      enum: ["ADMIN", "MEMBER"],
+      default: "MEMBER",
     },
-    address: String,
-    phone: String,
   },
-  { timestamps: true, versionKey: false }
+  {
+    versionKey: false,
+    timestamps: true,
+  }
 );
 
-export default mongoose.model("User", userSchema);
+export default mongoose.model("user", User);
